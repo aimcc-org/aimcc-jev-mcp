@@ -166,6 +166,37 @@ JEV_LOCAL_DTYPE=q4
 
 `completion_gate` 对检查状态采用确定性优先级：阻断检查失败会直接 `reject`，阻断检查尚未运行会返回 `run_checks`；只有检查条件满足后，需求证据判断才可能放行。
 
+## Playground 预览
+
+Playground 不经过 Codex、Claude 等 AI 客户端，直接调用与 MCP 相同的 Schema、Runtime、Provider 和 Policy：
+
+### 启动预览
+
+```bash
+nvm use
+pnpm install
+pnpm playground
+```
+
+启动成功后访问 [http://127.0.0.1:4317](http://127.0.0.1:4317)。不要直接通过 `file://` 打开 `playground/index.html`，否则页面无法请求本地 API。
+
+`pnpm playground` 会先构建 TypeScript，再启动预览服务。如果已经执行过构建，也可以直接启动产物：
+
+```bash
+pnpm run build
+node dist/playground.js
+```
+
+使用其他端口：
+
+```bash
+PLAYGROUND_PORT=4320 pnpm playground
+```
+
+页面包含全部六个 Tool 和典型分支预设，可以编辑原始 JSON，并查看完整 `DecisionEnvelope`、signals、Provider、模型与延迟。
+
+如果没有配置云端 Key，页面会和 MCP 一样自动使用本地 OpenJev；首次语义 Tool 请求可能需要等待模型下载。`completion_gate` 的“检查失败”和“检查未运行”预设是纯确定性路径，不调用模型。端口可通过 `PLAYGROUND_PORT` 修改，默认只监听本机 `127.0.0.1`。
+
 ## 开发
 
 ```bash

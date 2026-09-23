@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JEV Decision Playground</title>
+    <script>
+      if (window.location.protocol === "file:") {
+        window.location.replace("http://127.0.0.1:4317");
+      }
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f5f6;
+        --surface: #ffffff;
+        --surface-muted: #f8f9fa;
+        --line: #dfe3e6;
+        --line-strong: #c8ced3;
+        --text: #172126;
+        --muted: #66747c;
+        --accent: #087f73;
+        --accent-dark: #07665e;
+        --accent-soft: #e2f3f0;
+        --warning: #a85c00;
+        --danger: #b42318;
+        --success: #237a45;
+        --focus: #0b8f82;
+        font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-size: 14px; }
+      button, select, textarea { font: inherit; }
+      button, select { min-height: 36px; }
+      button:focus-visible, select:focus-visible, textarea:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+
+      .app { min-height: 100%; display: grid; grid-template-rows: 58px minmax(0, 1fr); }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 0 22px;
+        background: #18262a;
+        color: white;
+        border-bottom: 3px solid var(--accent);
+      }
+      .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #5b7478;
+        border-radius: 6px;
+        color: #85dfd1;
+        font-weight: 800;
+        font-size: 12px;
+      }
+      h1 { margin: 0; font-size: 16px; line-height: 1.2; letter-spacing: 0; }
+      .provider { display: flex; align-items: center; gap: 8px; min-width: 0; color: #d6e0e2; font-size: 12px; }
+      .provider-dot { width: 7px; height: 7px; border-radius: 50%; background: #8b969a; flex: none; }
+      .provider-dot.ready { background: #4ed6aa; }
+      #providerText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      main { min-height: 0; display: grid; grid-template-columns: 228px minmax(0, 1fr); }
+      nav { background: var(--surface); border-right: 1px solid var(--line); padding: 18px 12px; }
+      .nav-label, .field-label {
+        display: block;
+        margin: 0 8px 9px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .tool-list { display: grid; gap: 4px; }
+      .tool-button {
+        width: 100%;
+        height: 42px;
+        padding: 0 10px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: #344249;
+        text-align: left;
+        cursor: pointer;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+      }
+      .tool-button:hover { background: var(--surface-muted); }
+      .tool-button.active { background: var(--accent-soft); color: var(--accent-dark); border-color: #b9ddd8; font-weight: 700; }
+
+      .workspace { min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+      .toolbar {
+        min-height: 68px;
+        display: flex;
+        align-items: end;
+        gap: 12px;
+        padding: 12px 18px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+      }
+      .tool-heading { min-width: 180px; margin-right: auto; align-self: center; }
+      .tool-heading h2 { margin: 0 0 4px; font-size: 17px; letter-spacing: 0; }
+      .tool-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+      .control { display: grid; gap: 5px; min-width: 190px; }
+      .control label { color: var(--muted); font-size: 11px; font-weight: 700; }
+      select {
+        padding: 0 32px 0 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 6px;
+        background: white;
+        color: var(--text);
+      }
+      .run-button {
+        min-width: 90px;
+        padding: 0 18px;
+        border: 1px solid var(--accent-dark);
+        border-radius: 6px;
+        background: var(--accent);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .run-button:hover { background: var(--accent-dark); }
+      .run-button:disabled { opacity: .55; cursor: wait; }
+
+      .panes { min-width: 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
+      .pane { min-width: 0; min-height: 0; display: grid; grid-template-rows: 43px minmax(0, 1fr); background: var(--surface); }
+      .pane + .pane { border-left: 1px solid var(--line); }
+      .pane-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+      .pane-header h3 { margin: 0; font-size: 12px; letter-spacing: 0; }
+      .meta { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+      .status { padding: 3px 7px; border-radius: 4px; background: #eef0f1; color: #536168; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+      .status.resolved { color: var(--success); background: #e7f4eb; }
+      .status.review_required, .status.insufficient_evidence { color: var(--warning); background: #fff1da; }
+      .status.provider_error, .status.invalid_input, .status.indeterminate { color: var(--danger); background: #fce8e6; }
+      textarea, pre {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        padding: 16px;
+        background: var(--surface);
+        color: #243239;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.65;
+        letter-spacing: 0;
+        tab-size: 2;
+      }
+      textarea { resize: none; outline: none; }
+      textarea.invalid { box-shadow: inset 3px 0 0 var(--danger); }
+      pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: #fbfcfc; }
+
+      @media (max-width: 860px) {
+        .app { grid-template-rows: auto minmax(0, 1fr); }
+        header { min-height: 58px; padding: 10px 14px; }
+        main { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+        nav { border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; overflow-x: auto; }
+        .nav-label { display: none; }
+        .tool-list { display: flex; width: max-content; }
+        .tool-button { width: auto; height: 36px; }
+        .toolbar { align-items: stretch; flex-wrap: wrap; }
+        .tool-heading { flex: 1 0 100%; }
+        .control { flex: 1; min-width: 160px; }
+        .panes { grid-template-columns: 1fr; grid-template-rows: minmax(280px, 1fr) minmax(280px, 1fr); overflow: auto; }
+        .pane + .pane { border-left: 0; border-top: 1px solid var(--line); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="brand">
+          <div class="brand-mark">JEV</div>
+          <h1>Decision Playground</h1>
+        </div>
+        <div class="provider"><span id="providerDot" class="provider-dot"></span><span id="providerText">连接运行时</span></div>
+      </header>
+      <main>
+        <nav aria-label="Tools">
+          <span class="nav-label">Tools</span>
+          <div id="toolList" class="tool-list"></div>
+        </nav>
+        <section class="workspace">
+          <div class="toolbar">
+            <div class="tool-heading">
+              <h2 id="toolTitle"></h2>
+              <p id="toolDescription"></p>
+            </div>
+            <div class="control">
+              <label for="presetSelect">测试用例</label>
+              <select id="presetSelect"></select>
+            </div>
+            <button id="runButton" class="run-button" type="button">运行</button>
+          </div>
+          <div class="panes">
+            <section class="pane">
+              <div class="pane-header"><h3>请求参数</h3><span id="inputMeta" class="meta"></span></div>
+              <textarea id="inputEditor" spellcheck="false" aria-label="请求参数 JSON"></textarea>
+            </section>
+            <section class="pane">
+              <div class="pane-header">
+                <h3>Decision Envelope</h3>
+                <div><span id="statusBadge" class="status">ready</span> <span id="latency" class="meta"></span></div>
+              </div>
+              <pre id="resultView" aria-live="polite">选择测试用例后运行</pre>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script>
+      const tools = {
+        verify: {
+          title: "verify",
+          description: "主张与证据关系",
+          presets: [
+            ["构建成功", { claims: [{ id: "build_passed", text: "项目构建成功", blocking: true }], evidence: [{ id: "build_log", type: "build", text: "Build completed successfully with exit code 0", provenance: { command: "pnpm run build", generatedBy: "tool" } }] }],
+            ["主张被反驳", { claims: [{ id: "tests_passed", text: "全部测试通过", blocking: true }], evidence: [{ id: "test_log", type: "test", text: "Test run finished: 2 failed, 22 passed" }] }],
+            ["证据未覆盖", { claims: [{ id: "deploy_ready", text: "服务可以部署到生产环境", blocking: true }], evidence: [{ id: "lint_log", type: "lint", text: "Lint completed with no errors" }] }]
+          ]
+        },
+        rank_candidates: {
+          title: "rank_candidates",
+          description: "候选方案排序",
+          presets: [["实现方案", { objective: "选择维护成本最低且符合现有 TypeScript 架构的实现方案", candidates: [{ id: "reuse_runtime", description: "复用现有 PrimitiveRuntime 和策略配置" }, { id: "new_service", description: "新增独立 Python 微服务" }, { id: "inline_logic", description: "在 MCP handler 中直接编写判断逻辑" }] }]]
+        },
+        select_capability: {
+          title: "select_capability",
+          description: "执行能力路由",
+          presets: [
+            ["选择代码能力", { task: "修改仓库代码并运行测试", capabilities: [{ id: "filesystem", description: "读取和修改本地文件", available: true }, { id: "terminal", description: "执行构建和测试命令", available: true }, { id: "calendar", description: "管理日历事件", available: true }] }],
+            ["没有可用能力", { task: "读取私有设计文件", capabilities: [{ id: "figma", description: "读取 Figma 设计", available: false }] }]
+          ]
+        },
+        assess_task: {
+          title: "assess_task",
+          description: "复杂度、风险与歧义评估",
+          presets: [
+            ["明确的小改动", { task: "将 README 中的版本号从 0.1.0 更新为 0.1.1", context: "仅修改文档", constraints: ["不要修改代码"] }],
+            ["高歧义任务", { task: "把系统优化一下", context: "没有提供性能指标或目标模块", constraints: [] }]
+          ]
+        },
+        screen_content: {
+          title: "screen_content",
+          description: "调用方规则筛查",
+          presets: [
+            ["正常内容", { content: "本次提交新增了测试并更新了 README。", rules: [{ id: "credential", description: "内容包含 API Key、密码或访问令牌", action: "block" }, { id: "personal_data", description: "内容包含需要人工确认的个人敏感信息", action: "review" }] }],
+            ["疑似凭据", { content: "部署时请使用 API key sk-example-secret-value", rules: [{ id: "credential", description: "内容包含 API Key、密码或访问令牌", action: "block" }] }]
+          ]
+        },
+        completion_gate: {
+          title: "completion_gate",
+          description: "需求证据与硬检查门禁",
+          presets: [
+            ["完成并通过检查", { requirements: [{ id: "tools_registered", text: "六个 MCP Tool 均已注册", blocking: true }], evidence: [{ id: "server_diff", type: "diff", text: "createMcpServer registers verify, rank_candidates, select_capability, assess_task, screen_content and completion_gate" }], checks: [{ id: "tests", description: "完整测试", status: "passed", blocking: true, output: "24 tests passed" }] }],
+            ["阻断检查失败", { requirements: [{ id: "tools_registered", text: "六个 MCP Tool 均已注册", blocking: true }], evidence: [{ id: "server_diff", type: "diff", text: "All tools are registered" }], checks: [{ id: "tests", description: "完整测试", status: "failed", blocking: true, output: "1 test failed" }] }],
+            ["阻断检查未运行", { requirements: [{ id: "tools_registered", text: "六个 MCP Tool 均已注册", blocking: true }], evidence: [{ id: "server_diff", type: "diff", text: "All tools are registered" }], checks: [{ id: "tests", description: "完整测试", status: "not_run", blocking: true }] }]
+          ]
+        }
+      };
+
+      const toolList = document.querySelector("#toolList");
+      const presetSelect = document.querySelector("#presetSelect");
+      const inputEditor = document.querySelector("#inputEditor");
+      const resultView = document.querySelector("#resultView");
+      const statusBadge = document.querySelector("#statusBadge");
+      const runButton = document.querySelector("#runButton");
+      let activeTool = "verify";
+
+      function format(value) { return JSON.stringify(value, null, 2); }
+      function selectTool(name) {
+        activeTool = name;
+        const tool = tools[name];
+        document.querySelector("#toolTitle").textContent = tool.title;
+        document.querySelector("#toolDescription").textContent = tool.description;
+        [...toolList.children].forEach((button) => button.classList.toggle("active", button.dataset.tool === name));
+        presetSelect.replaceChildren(...tool.presets.map(([label], index) => new Option(label, String(index))));
+        loadPreset(0);
+      }
+      function loadPreset(index) {
+        inputEditor.value = format(tools[activeTool].presets[index][1]);
+        inputEditor.classList.remove("invalid");
+        document.querySelector("#inputMeta").textContent = `${inputEditor.value.length} chars`;
+        statusBadge.className = "status";
+        statusBadge.textContent = "ready";
+        document.querySelector("#latency").textContent = "";
+      }
+      async function run() {
+        let input;
+        try {
+          input = JSON.parse(inputEditor.value);
+          inputEditor.classList.remove("invalid");
+        } catch (error) {
+          inputEditor.classList.add("invalid");
+          resultView.textContent = format({ status: "invalid_input", message: error.message });
+          statusBadge.className = "status invalid_input";
+          statusBadge.textContent = "invalid_input";
+          return;
+        }
+        runButton.disabled = true;
+        runButton.textContent = "运行中";
+        statusBadge.className = "status";
+        statusBadge.textContent = "running";
+        const started = performance.now();
+        try {
+          const response = await fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tool: activeTool, input }) });
+          const value = await response.json();
+          resultView.textContent = format(value);
+          const status = value.status || (response.ok ? "resolved" : "invalid_input");
+          statusBadge.className = `status ${status}`;
+          statusBadge.textContent = status;
+        } catch (error) {
+          resultView.textContent = format({ status: "provider_error", message: error.message });
+          statusBadge.className = "status provider_error";
+          statusBadge.textContent = "provider_error";
+        } finally {
+          document.querySelector("#latency").textContent = `${Math.round(performance.now() - started)} ms`;
+          runButton.disabled = false;
+          runButton.textContent = "运行";
+        }
+      }
+
+      Object.keys(tools).forEach((name) => {
+        const button = document.createElement("button");
+        button.className = "tool-button";
+        button.type = "button";
+        button.dataset.tool = name;
+        button.textContent = name;
+        button.addEventListener("click", () => selectTool(name));
+        toolList.append(button);
+      });
+      presetSelect.addEventListener("change", () => loadPreset(Number(presetSelect.value)));
+      inputEditor.addEventListener("input", () => { document.querySelector("#inputMeta").textContent = `${inputEditor.value.length} chars`; });
+      runButton.addEventListener("click", run);
+      fetch("/api/info").then((response) => response.json()).then((info) => {
+        document.querySelector("#providerText").textContent = `${info.provider} / ${info.model}`;
+        document.querySelector("#providerDot").classList.add("ready");
+      }).catch(() => { document.querySelector("#providerText").textContent = "运行时不可用"; });
+      selectTool(activeTool);
+    </script>
+  </body>
+</html>
