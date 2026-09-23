@@ -1,0 +1,37 @@
+{
+  "name": "@aimcc/codex-jev-mcp",
+  "version": "0.1.0",
+  "description": "面向 Coding Agent 的模型无关决策内核 MCP。",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@11.17.0",
+  "bin": {
+    "codex-jev-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "config",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm run build && node --test test/*.test.mjs",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.0",
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "@typesafe-ai/sdk": "^0.6.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

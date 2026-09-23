@@ -1,0 +1,34 @@
+{
+  "version": "1",
+  "verify": {
+    "minimumConfidence": 0.8,
+    "profile": "verify-default@1"
+  },
+  "rankCandidates": {
+    "minimumConfidence": 0.65,
+    "minimumMargin": 0.1,
+    "profile": "rank-candidates-default@1"
+  },
+  "selectCapability": {
+    "minimumRelevance": 0.55,
+    "minimumConfidence": 0.65,
+    "minimumMargin": 0.1,
+    "profile": "select-capability-default@1"
+  },
+  "assessTask": {
+    "minimumConfidence": 0.6,
+    "maximumAutoComplexity": 1.5,
+    "maximumAutoRisk": 1.5,
+    "maximumAutoAmbiguity": 1,
+    "profile": "assess-task-default@1"
+  },
+  "screenContent": {
+    "reviewProbability": 0.5,
+    "blockProbability": 0.8,
+    "profile": "screen-content-default@1"
+  },
+  "completionGate": {
+    "minimumConfidence": 0.8,
+    "profile": "completion-gate-default@1"
+  }
+}
